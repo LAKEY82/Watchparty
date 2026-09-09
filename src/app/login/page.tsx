@@ -3,20 +3,51 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input, Label } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useRedirectIfAuthed } from "@/hooks/useAuth";
+import { ApiError, loginUser } from "@/lib/api";
+import { setAuth } from "@/lib/auth-storage";
+import { isValidEmail } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { checking } = useRedirectIfAuthed();
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
+    try {
+      const data = await loginUser({ email: email.trim(), password });
+      setAuth(data.token, data.user);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      setLoading(false);
+    }
+  }
+
+  if (checking) {
+    return (
+      <div className="bg-cinema flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted" />
+      </div>
+    );
   }
 
   return (
@@ -24,7 +55,14 @@ export default function LoginPage() {
       title="Welcome back"
       subtitle="Log in to jump back into your rooms."
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {error && (
+          <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
         <div>
           <Label htmlFor="email">Email</Label>
           <Input
@@ -32,6 +70,9 @@ export default function LoginPage() {
             type="email"
             placeholder="you@example.com"
             icon={<Mail className="h-4 w-4" />}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
           />
         </div>
@@ -50,6 +91,9 @@ export default function LoginPage() {
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             icon={<Lock className="h-4 w-4" />}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             required
             endAdornment={
               <button

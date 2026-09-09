@@ -17,11 +17,15 @@ export function SettingsModal({
   onClose,
   roomTitle,
   participants,
+  isHost = false,
+  onDeleteRoom,
 }: {
   open: boolean;
   onClose: () => void;
   roomTitle: string;
   participants: Participant[];
+  isHost?: boolean;
+  onDeleteRoom?: () => void;
 }) {
   const [tab, setTab] = useState<(typeof tabs)[number]>("General");
   const [title, setTitle] = useState(roomTitle);
@@ -29,6 +33,7 @@ export function SettingsModal({
   const [allowGuestControl, setAllowGuestControl] = useState(true);
   const [allowChat, setAllowChat] = useState(true);
   const [autoplayNext, setAutoplayNext] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
     <Modal open={open} onClose={onClose} title="Room settings">
@@ -73,9 +78,37 @@ export function SettingsModal({
               description="Let anyone play, pause, or seek"
             />
           </div>
-          <Button variant="danger" className="mt-5 w-full">
-            <Trash2 className="h-4 w-4" /> Delete room
-          </Button>
+          {isHost && (
+            <div className="mt-5">
+              {confirmingDelete ? (
+                <div className="space-y-2">
+                  <p className="text-center text-xs text-muted">
+                    This permanently deletes the room and its chat history for everyone.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => setConfirmingDelete(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button variant="danger" className="flex-1" onClick={onDeleteRoom}>
+                      <Trash2 className="h-4 w-4" /> Confirm delete
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="danger"
+                  className="w-full"
+                  onClick={() => setConfirmingDelete(true)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete room
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
 

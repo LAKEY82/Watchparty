@@ -1,7 +1,19 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Crown, Mic, MicOff, Send, Smile, Users, Video, VideoOff, MessageSquare } from "lucide-react";
+import {
+  Crown,
+  Mic,
+  MicOff,
+  Send,
+  Smile,
+  Users,
+  Video,
+  VideoOff,
+  MessageSquare,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
 import { mockMessages } from "@/lib/mock-data";
@@ -9,7 +21,26 @@ import { ChatMessage, Participant } from "@/types";
 
 const quickEmojis = ["😂", "❤️", "🔥", "😮", "👏", "🍿"];
 
-export function ChatSidebar({ participants }: { participants: Participant[] }) {
+interface ChatSidebarProps {
+  participants: Participant[];
+  // The following are only meaningful for the movie's audio stream, not
+  // the mic/camera icons above — they let the HOST silence a specific
+  // guest's copy of the movie sound without touching anyone else's (see
+  // useMovieWebRTC's setGuestAudioMuted). Omitted entirely for a guest
+  // viewing this list, since only the host can do this.
+  isHost?: boolean;
+  currentUserId?: string | null;
+  mutedGuestIds?: Set<string>;
+  onToggleGuestMute?: (guestUserId: string, muted: boolean) => void;
+}
+
+export function ChatSidebar({
+  participants,
+  isHost = false,
+  currentUserId,
+  mutedGuestIds,
+  onToggleGuestMute,
+}: ChatSidebarProps) {
   const [tab, setTab] = useState<"chat" | "people">("chat");
   const [messages, setMessages] = useState<ChatMessage[]>(mockMessages);
   const [draft, setDraft] = useState("");
@@ -137,6 +168,29 @@ export function ChatSidebar({ participants }: { participants: Participant[] }) {
               <div className="flex items-center gap-1.5 text-muted">
                 {p.micOn ? <Mic className="h-3.5 w-3.5 text-success" /> : <MicOff className="h-3.5 w-3.5" />}
                 {p.cameraOn ? <Video className="h-3.5 w-3.5 text-success" /> : <VideoOff className="h-3.5 w-3.5" />}
+                {isHost && !p.isHost && p.id !== currentUserId && onToggleGuestMute && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleGuestMute(p.id, !mutedGuestIds?.has(p.id))}
+                    title={
+                      mutedGuestIds?.has(p.id)
+                        ? `Unmute the movie's audio for ${p.name}`
+                        : `Mute the movie's audio for ${p.name}`
+                    }
+                    className={cn(
+                      "flex h-6 w-6 items-center justify-center rounded-full transition-colors",
+                      mutedGuestIds?.has(p.id)
+                        ? "bg-danger/20 text-danger"
+                        : "hover:bg-white/10 hover:text-foreground"
+                    )}
+                  >
+                    {mutedGuestIds?.has(p.id) ? (
+                      <VolumeX className="h-3.5 w-3.5" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           ))}

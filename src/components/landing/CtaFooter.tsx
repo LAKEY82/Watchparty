@@ -7,13 +7,7 @@ export function CtaSection() {
   return (
     <section id="pricing" className="relative mx-auto max-w-6xl px-4 pb-24">
       <div className="glass-strong relative overflow-hidden rounded-3xl px-6 py-16 text-center sm:px-16">
-        <div
-          className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[520px] -translate-x-1/2 rounded-full opacity-50 blur-3xl"
-          style={{
-            background:
-              "radial-gradient(closest-side, rgba(139,92,246,0.4), transparent)",
-          }}
-        />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-130 -translate-x-1/2 rounded-full [background:radial-gradient(closest-side,rgba(139,92,246,0.4),transparent)] opacity-50 blur-3xl" />
         <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl">
           Your next movie night is one link away
         </h2>

@@ -1,293 +1,585 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import {
-  Maximize,
-  Minimize,
-  Pause,
+  useEffect,
+  useState,
+  type RefObject,
+} from "react";
+
+import {
   Play,
-  Rewind,
-  FastForward,
+  Pause,
   Volume2,
   VolumeX,
-  Settings2,
+  Maximize,
+  Upload,
   Loader2,
 } from "lucide-react";
-import { cn, formatTime } from "@/lib/utils";
-import { Avatar } from "@/components/ui/Avatar";
-import { Participant } from "@/types";
 
-const DURATION = 7320;
-const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+import type {
+  Participant,
+  SyncSnapshot,
+} from "@/types";
 
-export function VideoPlayer({ participants }: { participants: Participant[] }) {
-  const [playing, setPlaying] = useState(true);
-  const [progress, setProgress] = useState(2734);
-  const [volume, setVolume] = useState(80);
+interface VideoPlayerProps {
+  participants: Participant[];
+  movieName: string;
+  movieSource: string;
+  sourceType: "url" | "upload" | "library";
+  canControl: boolean;
+  syncAnchor: SyncSnapshot | null;
+  playbackEventId: number;
+  onLocalPlay: (position: number) => void;
+  onLocalPause: (position: number) => void;
+  onLocalSeek: (
+    position: number,
+    playbackRate?: number,
+  ) => void;
+  roomCode?: string;
+  isHost: boolean;
+  // WebRTC state/controls live one level up (in RoomPage) so the "host
+  // mutes a specific guest" control in the participant list and this
+  // player can share the same connections — see useMovieWebRTC there.
+  videoRef: RefObject<HTMLVideoElement | null>;
+  streaming: boolean;
+  supported: boolean;
+  hostMutedMe: boolean;
+  setLocalMuted: (muted: boolean) => void;
+}
+
+export function VideoPlayer({
+  // Not rendered yet in this simplified player (no camera strip/reactions
+  // here) — kept in the prop contract since RoomPage already passes it and
+  // a future pass may want it again.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  participants,
+  movieName,
+  movieSource,
+  sourceType,
+  canControl,
+  syncAnchor,
+  playbackEventId,
+  onLocalPlay,
+  onLocalPause,
+  onLocalSeek,
+  isHost,
+  videoRef,
+  streaming,
+  supported,
+  hostMutedMe,
+  setLocalMuted,
+}: VideoPlayerProps) {
+  const [localFileUrl, setLocalFileUrl] =
+    useState<string | null>(null);
+
+  const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [speed, setSpeed] = useState(1);
-  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [buffering, setBuffering] = useState(false);
-  const [reaction, setReaction] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
+  const [loading, setLoading] = useState(false);
+
+  /*
+   * Host selects a local movie.
+   */
+  function handleFileSelect(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("video/")) {
+      alert("Please select a video file.");
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+
+    setLocalFileUrl((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous);
+      }
+
+      return url;
+    });
+
+    setLoading(true);
+  }
+
+  /*
+   * Clean local file URL.
+   */
   useEffect(() => {
-    if (!playing) return;
-    const id = setInterval(() => {
-      setProgress((p) => (p >= DURATION ? DURATION : p + speed));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [playing, speed]);
+    return () => {
+      if (localFileUrl) {
+        URL.revokeObjectURL(localFileUrl);
+      }
+    };
+  }, [localFileUrl]);
 
-  function resetHideTimer() {
-    setShowControls(true);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setShowControls(false), 3000);
+  /*
+   * Determine what the HOST video should display.
+   */
+  useEffect(() => {
+    if (!videoRef.current) {
+      return;
+    }
+
+    if (!isHost) {
+      return;
+    }
+
+    if (localFileUrl) {
+      videoRef.current.src = localFileUrl;
+      videoRef.current.load();
+
+      return;
+    }
+
+    if (
+      sourceType === "url" &&
+      movieSource
+    ) {
+      videoRef.current.src = movieSource;
+      videoRef.current.load();
+
+      return;
+    }
+
+    /*
+     * Library source can be implemented later.
+     */
+  }, [
+    isHost,
+    localFileUrl,
+    sourceType,
+    movieSource,
+    videoRef,
+  ]);
+
+  /*
+   * Guest should NOT load movieSource.
+   *
+   * Guest receives the movie through WebRTC.
+   */
+  useEffect(() => {
+    if (isHost) {
+      return;
+    }
+
+    if (!videoRef.current) {
+      return;
+    }
+
+    /*
+     * Important:
+     * Do not set video.src for guests.
+     */
+    videoRef.current.removeAttribute("src");
+  }, [isHost, videoRef]);
+
+  /*
+   * Playback synchronization.
+   *
+   * Only the HOST controls the actual source video.
+   */
+  useEffect(() => {
+    if (!isHost) {
+      return;
+    }
+
+    const video = videoRef.current;
+
+    if (!video || !syncAnchor) {
+      return;
+    }
+
+const {
+  status,
+  position,
+  playbackRate = 1,
+} = syncAnchor.state;
+
+const serverPlaying = status === "playing";
+
+    const elapsed =
+      serverPlaying
+        ? (Date.now() -
+            syncAnchor.serverTime) /
+          1000
+        : 0;
+
+    const target =
+      Math.max(
+        0,
+        position + elapsed * playbackRate,
+      );
+
+    if (
+      Number.isFinite(target) &&
+      Math.abs(video.currentTime - target) > 1.5
+    ) {
+      video.currentTime = target;
+    }
+
+    video.playbackRate = playbackRate;
+
+    if (serverPlaying) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [
+    isHost,
+    syncAnchor,
+    playbackEventId,
+    videoRef,
+  ]);
+
+  /*
+   * Host playback events.
+   */
+  function handlePlay() {
+    if (!isHost || !canControl) {
+      return;
+    }
+
+    setIsPlaying(true);
+
+    onLocalPlay(
+      videoRef.current?.currentTime || 0,
+    );
+  }
+
+  function handlePause() {
+    if (!isHost || !canControl) {
+      return;
+    }
+
+    setIsPlaying(false);
+
+    onLocalPause(
+      videoRef.current?.currentTime || 0,
+    );
+  }
+
+  function handleSeek(
+    event: React.SyntheticEvent<
+      HTMLVideoElement
+    >,
+  ) {
+    if (!isHost || !canControl) {
+      return;
+    }
+
+    const video =
+      event.currentTarget;
+
+    onLocalSeek(
+      video.currentTime,
+      video.playbackRate,
+    );
+  }
+
+  function handleLoadedMetadata() {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    setDuration(video.duration || 0);
+    setLoading(false);
+  }
+
+  function handleTimeUpdate() {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    setCurrentTime(
+      video.currentTime,
+    );
   }
 
   function togglePlay() {
-    setPlaying((v) => !v);
-    if (!playing) {
-      setBuffering(true);
-      setTimeout(() => setBuffering(false), 500);
+    if (!isHost || !canControl) {
+      return;
+    }
+
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    if (video.paused) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
     }
   }
 
+  function toggleMute() {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    const nextMuted = !video.muted;
+
+    // Before the movie stream exists (no guest has connected yet), the
+    // video's own `muted` is what governs local playback. Once it exists,
+    // setLocalMuted controls a dedicated gain node instead (see
+    // getMovieStream) — video.muted itself becomes irrelevant for what's
+    // actually audible then, but keeping it in sync costs nothing and
+    // means the icon/UI state has one clear source of truth either way.
+    video.muted = nextMuted;
+    setLocalMuted(nextMuted);
+
+    setMuted(nextMuted);
+  }
+
   function toggleFullscreen() {
-    setFullscreen((v) => !v);
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+      return;
+    }
+
+    video.requestFullscreen().catch(() => {});
   }
 
-  function fireReaction(emoji: string) {
-    setReaction(emoji);
-    setTimeout(() => setReaction(null), 1200);
-  }
+  function formatTime(seconds: number) {
+    if (!Number.isFinite(seconds)) {
+      return "00:00";
+    }
 
-  const watchingWithCamera = participants.filter((p) => p.cameraOn);
+    const mins = Math.floor(
+      seconds / 60,
+    );
+
+    const secs = Math.floor(
+      seconds % 60,
+    );
+
+    return `${String(mins).padStart(
+      2,
+      "0",
+    )}:${String(secs).padStart(2, "0")}`;
+  }
 
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={resetHideTimer}
-      onMouseLeave={() => setShowControls(playing ? false : true)}
-      className={cn(
-        "group relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-2xl shadow-black/60",
-        fullscreen && "fixed inset-0 z-50 aspect-auto rounded-none"
-      )}
-    >
-      {/* Fake movie frame */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(76,29,149,0.55), rgba(190,24,93,0.35)), radial-gradient(circle at 30% 25%, rgba(255,255,255,0.1), transparent 55%), #050507",
-        }}
-      />
-      <div className="bg-noise absolute inset-0" />
+    <div className="relative w-full overflow-hidden rounded-2xl bg-black shadow-2xl">
+      <div className="relative aspect-video w-full">
+        <video
+          ref={videoRef}
+          // transform-gpu + opacity < 1 force this element off Chromium's
+          // hardware "overlay" fast path and onto the normal compositor.
+          // That path matters on both ends of the stream:
+          //  - HOST: HTMLVideoElement.captureStream() can only read frame
+          //    data from the normal compositor. If the host's own local
+          //    playback is using a hardware overlay (common for big local
+          //    video files — it looks completely normal on the host's own
+          //    screen), captureStream() silently produces black frames
+          //    with no error, even though its dimensions/readyState look
+          //    correct — exactly what a guest would then receive.
+          //  - GUEST: an overlay-rendered remote video can likewise fail
+          //    to composite visually despite readyState 4 and non-zero
+          //    dimensions. Same fix, opposite end.
+          // The 0.9999 opacity is visually identical to 1 but disqualifies
+          // the element from the overlay path, which requires full opacity.
+          className="h-full w-full object-contain transform-gpu"
+          style={{ opacity: 0.9999 }}
+          playsInline
+          controls={false}
+          muted={false}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onSeeked={handleSeek}
+          onLoadedMetadata={
+            handleLoadedMetadata
+          }
+          onTimeUpdate={
+            handleTimeUpdate
+          }
+        />
 
-      {/* Center title watermark */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/40">Now playing</p>
-        <p className="text-2xl font-semibold text-white/70 sm:text-3xl">Nocturne Drive</p>
-      </div>
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+          </div>
+        )}
 
-      {buffering && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-          <Loader2 className="h-10 w-10 animate-spin text-white/80" />
-        </div>
-      )}
+        {!isHost &&
+          !streaming && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
 
-      {reaction && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-24 flex justify-center">
-          <span className="animate-fade-in-up text-5xl">{reaction}</span>
-        </div>
-      )}
+              <div>
+                <p className="text-sm font-medium text-white">
+                  Waiting for the host
+                </p>
 
-      {/* Camera strip */}
-      {watchingWithCamera.length > 0 && (
-        <div className="absolute right-3 top-3 flex flex-col gap-2 sm:right-4 sm:top-4">
-          {watchingWithCamera.slice(0, 3).map((p) => (
-            <div
-              key={p.id}
-              className="glass-strong relative flex h-16 w-24 items-center justify-center rounded-lg sm:h-20 sm:w-28"
-              style={{
-                background: `linear-gradient(160deg, rgba(139,92,246,0.35), rgba(236,72,153,0.25))`,
-              }}
-            >
-              <Avatar name={p.name} color={p.avatarColor} size="sm" />
-              <span className="absolute bottom-1 left-1.5 text-[10px] text-white/80">
-                {p.name.split(" ")[0]}
-              </span>
+                <p className="mt-1 text-xs text-white/60">
+                  {movieName
+                    ? `"${movieName}" will appear here once the host starts playing.`
+                    : "The host's movie will appear here."}
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Top gradient + live badge */}
-      <div
-        className={cn(
-          "absolute inset-x-0 top-0 flex items-center gap-2 bg-gradient-to-b from-black/60 to-transparent p-4 transition-opacity duration-300",
-          showControls ? "opacity-100" : "opacity-0"
-        )}
-      >
-        <span className="flex items-center gap-1.5 rounded-full bg-danger/90 px-2.5 py-1 text-[11px] font-semibold uppercase text-white">
-          <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-          Synced
-        </span>
-      </div>
+        {!isHost &&
+          streaming && (
+            <>
+              <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs text-white backdrop-blur">
+                Live from host
+              </div>
 
-      {/* Center play button */}
-      {!playing && !buffering && (
-        <button
-          onClick={togglePlay}
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15 backdrop-blur-md transition-transform hover:scale-110">
-            <Play className="ml-1.5 h-8 w-8 fill-white text-white" />
-          </span>
-        </button>
-      )}
-
-      {/* Quick reactions */}
-      <div
-        className={cn(
-          "absolute bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/40 px-2 py-1.5 backdrop-blur-md transition-opacity duration-300 sm:bottom-28",
-          showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-      >
-        {["❤️", "😂", "😮", "👏", "🔥"].map((emoji) => (
-          <button
-            key={emoji}
-            onClick={() => fireReaction(emoji)}
-            className="rounded-full p-1.5 text-lg transition-transform hover:scale-125"
-          >
-            {emoji}
-          </button>
-        ))}
-      </div>
-
-      {/* Bottom controls */}
-      <div
-        className={cn(
-          "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-3 pt-10 transition-opacity duration-300 sm:px-5 sm:pb-4",
-          showControls ? "opacity-100" : "opacity-0"
-        )}
-      >
-        {/* Seek bar */}
-        <div className="mb-2 flex items-center gap-3">
-          <span className="w-10 shrink-0 text-right text-xs text-white/70 tabular-nums">
-            {formatTime(progress)}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={DURATION}
-            value={progress}
-            onChange={(e) => setProgress(Number(e.target.value))}
-            className="w-full"
-            style={{
-              background: `linear-gradient(to right, #c084fc ${(progress / DURATION) * 100}%, rgba(255,255,255,0.2) 0%)`,
-            }}
-          />
-          <span className="w-10 shrink-0 text-xs text-white/70 tabular-nums">
-            {formatTime(DURATION)}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <button
-              onClick={() => setProgress((p) => Math.max(0, p - 10))}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
-            >
-              <Rewind className="h-4 w-4" />
-            </button>
-            <button
-              onClick={togglePlay}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-transform hover:scale-105"
-            >
-              {playing ? (
-                <Pause className="h-4 w-4 fill-black" />
-              ) : (
-                <Play className="ml-0.5 h-4 w-4 fill-black" />
+              {hostMutedMe && (
+                <div className="pointer-events-none absolute left-4 top-12 rounded-full bg-danger/80 px-3 py-1 text-xs text-white backdrop-blur">
+                  The host muted your audio
+                </div>
               )}
-            </button>
-            <button
-              onClick={() => setProgress((p) => Math.min(DURATION, p + 10))}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
-            >
-              <FastForward className="h-4 w-4" />
-            </button>
 
-            <div className="hidden items-center gap-1.5 pl-1 sm:flex">
               <button
-                onClick={() => setMuted((v) => !v)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
+                type="button"
+                onClick={toggleMute}
+                title={muted ? "Unmute" : "Mute"}
+                className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur hover:bg-black/80"
               >
-                {muted || volume === 0 ? (
+                {muted ? (
                   <VolumeX className="h-4 w-4" />
                 ) : (
                   <Volume2 className="h-4 w-4" />
                 )}
               </button>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={muted ? 0 : volume}
-                onChange={(e) => {
-                  setVolume(Number(e.target.value));
-                  setMuted(false);
-                }}
-                className="w-20"
-              />
-            </div>
-          </div>
+            </>
+          )}
+      </div>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            <div className="relative">
-              <button
-                onClick={() => setShowSpeedMenu((v) => !v)}
-                className="flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-white transition-colors hover:bg-white/15"
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-                {speed}x
-              </button>
-              {showSpeedMenu && (
-                <div className="glass-strong absolute bottom-11 right-0 w-24 overflow-hidden rounded-xl p-1 animate-fade-in-up">
-                  {speeds.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setSpeed(s);
-                        setShowSpeedMenu(false);
-                      }}
-                      className={cn(
-                        "block w-full rounded-lg px-3 py-1.5 text-left text-xs",
-                        s === speed ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10"
-                      )}
-                    >
-                      {s}x
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+      {isHost && (
+        <div className="border-t border-white/10 bg-black/90">
+          <div className="flex items-center gap-3 px-4 py-3">
             <button
-              onClick={toggleFullscreen}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
+              type="button"
+              onClick={togglePlay}
+              disabled={!canControl}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {fullscreen ? (
-                <Minimize className="h-4 w-4" />
+              {isPlaying ? (
+                <Pause className="h-4 w-4" />
               ) : (
-                <Maximize className="h-4 w-4" />
+                <Play className="h-4 w-4" />
               )}
+            </button>
+
+            <span className="text-xs text-white/60">
+              {formatTime(currentTime)}
+            </span>
+
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={currentTime}
+              disabled={!canControl}
+              onChange={(event) => {
+                const time =
+                  Number(
+                    event.target.value,
+                  );
+
+                if (!videoRef.current) {
+                  return;
+                }
+
+                videoRef.current.currentTime =
+                  time;
+
+                onLocalSeek(
+                  time,
+                  videoRef.current
+                    .playbackRate,
+                );
+              }}
+              className="flex-1"
+            />
+
+            <span className="text-xs text-white/60">
+              {formatTime(duration)}
+            </span>
+
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            >
+              {muted ? (
+                <VolumeX className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            >
+              <Maximize className="h-4 w-4" />
             </button>
           </div>
         </div>
-      </div>
+      )}
+
+      {isHost && !localFileUrl && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <label className="pointer-events-auto flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-white/10 bg-black/70 px-8 py-7 text-center backdrop-blur-md transition hover:bg-black/80">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
+              <Upload className="h-5 w-5 text-white" />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-white">
+                Select your movie
+              </p>
+
+              <p className="mt-1 text-xs text-white/50">
+                Only you need to select the file.
+              </p>
+            </div>
+
+            <input
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+          </label>
+        </div>
+      )}
+
+      {!supported && (
+        <div className="absolute bottom-16 left-4 right-4 rounded-lg bg-red-500/90 px-4 py-3 text-xs text-white">
+          Your browser does not support
+          movie capture streaming.
+          Try the latest Chrome or Edge.
+        </div>
+      )}
     </div>
   );
 }

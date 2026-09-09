@@ -3,20 +3,65 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input, Label } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useRedirectIfAuthed } from "@/hooks/useAuth";
+import { ApiError, registerUser } from "@/lib/api";
+import { setAuth } from "@/lib/auth-storage";
+import { isValidEmail } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { checking } = useRedirectIfAuthed();
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    if (!name.trim()) {
+      setError("Enter your name.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
+    try {
+      const data = await registerUser({ name: name.trim(), email: email.trim(), password });
+      setAuth(data.token, data.user);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      setLoading(false);
+    }
+  }
+
+  if (checking) {
+    return (
+      <div className="bg-cinema flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted" />
+      </div>
+    );
   }
 
   return (
@@ -24,7 +69,14 @@ export default function RegisterPage() {
       title="Create your account"
       subtitle="Start hosting watch parties in seconds."
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {error && (
+          <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
         <div>
           <Label htmlFor="name">Full name</Label>
           <Input
@@ -32,6 +84,9 @@ export default function RegisterPage() {
             type="text"
             placeholder="Jordan Lee"
             icon={<User className="h-4 w-4" />}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
             required
           />
         </div>
@@ -43,6 +98,9 @@ export default function RegisterPage() {
             type="email"
             placeholder="you@example.com"
             icon={<Mail className="h-4 w-4" />}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
           />
         </div>
@@ -54,6 +112,9 @@ export default function RegisterPage() {
             type={showPassword ? "text" : "password"}
             placeholder="At least 8 characters"
             icon={<Lock className="h-4 w-4" />}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
             required
             minLength={8}
             endAdornment={
@@ -66,6 +127,21 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             }
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="confirm-password">Confirm password</Label>
+          <Input
+            id="confirm-password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Re-enter your password"
+            icon={<Lock className="h-4 w-4" />}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            required
+            minLength={8}
           />
         </div>
 

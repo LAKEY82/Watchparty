@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowLeft,
   Film,
   Globe2,
+  Loader2,
   Lock,
   Sparkles,
   Upload,
@@ -17,6 +19,8 @@ import { Input, Label } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/ui/Switch";
 import { cn } from "@/lib/utils";
+import { useRequireAuth } from "@/hooks/useAuth";
+import { ApiError, createRoom } from "@/lib/api";
 
 const sourceTabs = [
   { id: "url", label: "Paste URL", icon: Globe2 },
@@ -24,19 +28,70 @@ const sourceTabs = [
   { id: "library", label: "From library", icon: Film },
 ] as const;
 
+const libraryTitles = ["Nocturne Drive", "Glass Horizon", "Cipher Room", "The Long Reel"];
+
+// One fixed gradient per library slot — a static, known set, so these are
+// plain Tailwind arbitrary-value utilities rather than a runtime style object.
+const libraryTileGradients = [
+  "[background:linear-gradient(160deg,hsl(260_70%_45%_/_0.6),hsl(320_70%_35%_/_0.5))]",
+  "[background:linear-gradient(160deg,hsl(330_70%_45%_/_0.6),hsl(390_70%_35%_/_0.5))]",
+  "[background:linear-gradient(160deg,hsl(400_70%_45%_/_0.6),hsl(460_70%_35%_/_0.5))]",
+  "[background:linear-gradient(160deg,hsl(470_70%_45%_/_0.6),hsl(530_70%_35%_/_0.5))]",
+];
+
 export default function CreateRoomPage() {
   const router = useRouter();
+  const { token, ready } = useRequireAuth();
+
+  const [title, setTitle] = useState("Friday Movie Night");
+  const [movieName, setMovieName] = useState("");
   const [source, setSource] = useState<(typeof sourceTabs)[number]["id"]>("url");
+  const [movieUrl, setMovieUrl] = useState("");
+  const [uploadFileName, setUploadFileName] = useState("");
+  const [libraryTitle, setLibraryTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [allowGuestControl, setAllowGuestControl] = useState(false);
   const [maxGuests, setMaxGuests] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!token) return;
+
+    setError(null);
     setLoading(true);
-    setTimeout(() => router.push("/room/new"), 700);
+
+    const movieSource =
+      source === "url" ? movieUrl : source === "upload" ? uploadFileName : libraryTitle;
+
+    try {
+      const { room } = await createRoom(token, {
+        title,
+        movieName,
+        movieSource,
+        sourceType: source,
+        isPrivate,
+        maxGuests,
+        chatEnabled,
+        voiceEnabled,
+        allowGuestControl,
+      });
+      router.push(`/room/${room.code}`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't create the room. Try again.");
+      setLoading(false);
+    }
+  }
+
+  if (!ready) {
+    return (
+      <div className="bg-cinema flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted" />
+      </div>
+    );
   }
 
   return (
@@ -58,9 +113,32 @@ export default function CreateRoomPage() {
 
         <form onSubmit={handleSubmit}>
           <GlassPanel className="space-y-6 p-6 sm:p-8">
+            {error && (
+              <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {error}
+              </div>
+            )}
+
             <div>
               <Label htmlFor="room-name">Room name</Label>
-              <Input id="room-name" placeholder="Friday Movie Night" required defaultValue="Friday Movie Night" />
+              <Input
+                id="room-name"
+                placeholder="Friday Movie Night"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="movie-name">Movie name (optional)</Label>
+              <Input
+                id="movie-name"
+                placeholder="e.g. Nocturne Drive"
+                value={movieName}
+                onChange={(e) => setMovieName(e.target.value)}
+              />
             </div>
 
             <div>
@@ -85,36 +163,54 @@ export default function CreateRoomPage() {
               </div>
 
               {source === "url" && (
-                <Input placeholder="https://example.com/movie.mp4" required />
+                <Input
+                  placeholder="https://example.com/movie.mp4"
+                  required
+                  value={movieUrl}
+                  onChange={(e) => setMovieUrl(e.target.value)}
+                />
               )}
               {source === "upload" && (
                 <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-8 text-center transition-colors hover:border-accent/50 hover:bg-white/5">
                   <Upload className="h-5 w-5 text-muted" />
                   <span className="text-sm text-muted">
-                    Drag & drop a video file, or{" "}
-                    <span className="text-accent">browse</span>
+                    {uploadFileName ? (
+                      uploadFileName
+                    ) : (
+                      <>
+                        Drag & drop a video file, or <span className="text-accent">browse</span>
+                      </>
+                    )}
                   </span>
-                  <input type="file" className="hidden" accept="video/*" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="video/*"
+                    onChange={(e) => setUploadFileName(e.target.files?.[0]?.name || "")}
+                  />
                 </label>
               )}
               {source === "library" && (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {["Nocturne Drive", "Glass Horizon", "Cipher Room", "The Long Reel"].map(
-                    (title, i) => (
-                      <button
-                        key={title}
-                        type="button"
-                        className="group relative aspect-[2/3] overflow-hidden rounded-lg border border-white/10 transition-transform hover:-translate-y-1"
-                        style={{
-                          background: `linear-gradient(160deg, hsl(${i * 70 + 260} 70% 45% / 0.6), hsl(${i * 70 + 320} 70% 35% / 0.5))`,
-                        }}
-                      >
-                        <span className="absolute inset-x-0 bottom-0 bg-black/50 p-1.5 text-left text-[10px] leading-tight text-white">
-                          {title}
-                        </span>
-                      </button>
-                    )
-                  )}
+                  {libraryTitles.map((libTitle, i) => (
+                    <button
+                      key={libTitle}
+                      type="button"
+                      onClick={() => {
+                        setLibraryTitle(libTitle);
+                        setMovieName(libTitle);
+                      }}
+                      className={cn(
+                        "group relative aspect-2/3 overflow-hidden rounded-lg border transition-transform hover:-translate-y-1",
+                        libraryTileGradients[i % libraryTileGradients.length],
+                        libraryTitle === libTitle ? "border-accent" : "border-white/10"
+                      )}
+                    >
+                      <span className="absolute inset-x-0 bottom-0 bg-black/50 p-1.5 text-left text-[10px] leading-tight text-white">
+                        {libTitle}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -170,7 +266,7 @@ export default function CreateRoomPage() {
               />
             </div>
 
-            <div className="divide-y divide-white/10 rounded-xl bg-white/[0.03] px-4">
+            <div className="divide-y divide-white/10 rounded-xl bg-white/3 px-4">
               <Switch
                 checked={chatEnabled}
                 onChange={setChatEnabled}
@@ -182,6 +278,12 @@ export default function CreateRoomPage() {
                 onChange={setVoiceEnabled}
                 label="Voice & video"
                 description="Allow mic and camera in the room"
+              />
+              <Switch
+                checked={allowGuestControl}
+                onChange={setAllowGuestControl}
+                label="Guest playback control"
+                description="Let anyone play, pause, and seek — not just the host"
               />
             </div>
 

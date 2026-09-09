@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Play, RotateCcw, Users2 } from "lucide-react";
 import { GlassPanel, Badge } from "@/components/ui/GlassPanel";
 import { Avatar } from "@/components/ui/Avatar";
+import { cn } from "@/lib/utils";
 import { Room } from "@/types";
 
 export function RoomCard({ room, index = 0 }: { room: Room; index?: number }) {
@@ -10,7 +11,7 @@ export function RoomCard({ room, index = 0 }: { room: Room; index?: number }) {
       className="group overflow-hidden opacity-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.07]"
       style={{ animationDelay: `${index * 70}ms` }}
     >
-      <div className="relative aspect-video" style={{ background: room.poster }}>
+      <div className={cn("relative aspect-video", room.posterClassName)}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
         {room.isLive && (

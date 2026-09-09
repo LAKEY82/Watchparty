@@ -8,13 +8,7 @@ import { avatarColors } from "@/lib/mock-data";
 export function Hero() {
   return (
     <section className="relative overflow-hidden pb-24 pt-40 sm:pt-48">
-      <div
-        className="pointer-events-none absolute -top-32 left-1/2 h-[560px] w-[900px] -translate-x-1/2 rounded-full opacity-40 blur-3xl animate-float"
-        style={{
-          background:
-            "radial-gradient(closest-side, rgba(139,92,246,0.35), rgba(236,72,153,0.15), transparent)",
-        }}
-      />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-140 w-225 -translate-x-1/2 animate-float rounded-full [background:radial-gradient(closest-side,rgba(139,92,246,0.35),rgba(236,72,153,0.15),transparent)] opacity-40 blur-3xl" />
 
       <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 text-center">
         <div className="animate-fade-in-up opacity-0 [animation-delay:0ms]">
@@ -80,13 +74,7 @@ export function Hero() {
             </div>
           </div>
 
-          <div
-            className="relative flex aspect-video items-center justify-center"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(139,92,246,0.45), rgba(236,72,153,0.25)), radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), transparent 60%)",
-            }}
-          >
+          <div className="relative flex aspect-video items-center justify-center [background:linear-gradient(135deg,rgba(139,92,246,0.45),rgba(236,72,153,0.25)),radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.12),transparent_60%)]">
             <button className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 backdrop-blur-md transition-transform hover:scale-110">
               <Play className="ml-1 h-6 w-6 fill-white text-white" />
             </button>

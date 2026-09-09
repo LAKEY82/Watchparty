@@ -17,19 +17,8 @@ export function AuthLayout({
     <div className="bg-cinema flex min-h-screen">
       {/* Visual side */}
       <div className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div
-          className="pointer-events-none absolute -top-40 -left-20 h-[520px] w-[520px] rounded-full opacity-40 blur-3xl animate-float"
-          style={{
-            background: "radial-gradient(closest-side, rgba(139,92,246,0.5), transparent)",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute -bottom-32 -right-10 h-[420px] w-[420px] rounded-full opacity-30 blur-3xl animate-float"
-          style={{
-            background: "radial-gradient(closest-side, rgba(236,72,153,0.5), transparent)",
-            animationDelay: "1.5s",
-          }}
-        />
+        <div className="pointer-events-none absolute -top-40 -left-20 h-[520px] w-[520px] animate-float rounded-full [background:radial-gradient(closest-side,rgba(139,92,246,0.5),transparent)] opacity-40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -right-10 h-[420px] w-[420px] animate-float rounded-full [background:radial-gradient(closest-side,rgba(236,72,153,0.5),transparent)] opacity-30 blur-3xl [animation-delay:1.5s]" />
 
         <Logo className="relative z-10" />
 
@@ -45,13 +34,7 @@ export function AuthLayout({
             </span>
           </div>
 
-          <div
-            className="mb-4 aspect-video rounded-xl"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(139,92,246,0.5), rgba(236,72,153,0.3)), radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), transparent 60%)",
-            }}
-          />
+          <div className="mb-4 aspect-video rounded-xl [background:linear-gradient(135deg,rgba(139,92,246,0.5),rgba(236,72,153,0.3)),radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.12),transparent_60%)]" />
 
           <div className="flex items-center justify-between">
             <div className="flex -space-x-2.5">
