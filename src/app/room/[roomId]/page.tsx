@@ -13,10 +13,10 @@ import { ShareModal } from "@/components/room/ShareModal";
 import { SettingsModal } from "@/components/room/SettingsModal";
 import { useRequireAuth } from "@/hooks/useAuth";
 import { useMovieWebRTC } from "@/hooks/useMovieWebRTC";
-import { ApiError, deleteRoom, getRoom } from "@/lib/api";
-import { mapApiParticipant } from "@/lib/mappers";
+import { ApiError, deleteRoom, getMessages, getRoom } from "@/lib/api";
+import { mapApiMessage, mapApiParticipant } from "@/lib/mappers";
 import { getSocket } from "@/lib/socket";
-import type { Participant, PlaybackState, SyncSnapshot } from "@/types";
+import type { ApiMessage, ChatMessage, Participant, PlaybackState, SyncSnapshot } from "@/types";
 
 const SYNC_POLL_INTERVAL_MS = 15_000;
 
@@ -47,6 +47,8 @@ export default function RoomPage({
 
   const [syncAnchor, setSyncAnchor] = useState<SyncSnapshot | null>(null);
   const [playbackEventId, setPlaybackEventId] = useState(0);
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(false);
@@ -110,6 +112,28 @@ export default function RoomPage({
     };
   }, [token, code, user]);
 
+  // Chat history — fetched once on entry so a message sent before this
+  // client joined (or before a page refresh) still shows up. New messages
+  // after that arrive over the socket, in the join-room effect below.
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    getMessages(token, code)
+      .then((data) => {
+        if (cancelled) return;
+        setMessages(data.messages.map(mapApiMessage));
+      })
+      .catch(() => {
+        // Non-fatal — chat still works for anything sent from here on.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, code]);
+
   function refreshParticipants() {
     if (!token) return;
     getRoom(token, code)
@@ -143,12 +167,16 @@ export default function RoomPage({
     function onPlaybackBroadcast(payload: { state: PlaybackState; serverTime: number }) {
       applyAnchor(payload.state, payload.serverTime, true);
     }
+    function onChatMessage(payload: ApiMessage) {
+      setMessages((prev) => [...prev, mapApiMessage(payload)]);
+    }
 
     socket.on("user-joined", onUserJoined);
     socket.on("user-left", onUserLeft);
     socket.on("play", onPlaybackBroadcast);
     socket.on("pause", onPlaybackBroadcast);
     socket.on("seek", onPlaybackBroadcast);
+    socket.on("chat-message", onChatMessage);
 
     return () => {
       socket.off("user-joined", onUserJoined);
@@ -156,6 +184,7 @@ export default function RoomPage({
       socket.off("play", onPlaybackBroadcast);
       socket.off("pause", onPlaybackBroadcast);
       socket.off("seek", onPlaybackBroadcast);
+      socket.off("chat-message", onChatMessage);
       socket.emit("leave-room", {});
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -208,6 +237,13 @@ export default function RoomPage({
     if (!token) return;
     getSocket(token).emit("seek", { position, playbackRate }, (ack: AckResponse) => {
       if (!ack.ok) setError(ack.error || "Couldn't sync that change.");
+    });
+  }
+
+  function handleSendMessage(text: string) {
+    if (!token) return;
+    getSocket(token).emit("chat-message", { text }, (ack: AckResponse) => {
+      if (!ack.ok) setError(ack.error || "Couldn't send that message.");
     });
   }
 
@@ -321,6 +357,8 @@ export default function RoomPage({
             currentUserId={user?.id}
             mutedGuestIds={mutedGuestIds}
             onToggleGuestMute={setGuestAudioMuted}
+            messages={messages}
+            onSendMessage={handleSendMessage}
           />
         </div>
 
@@ -353,6 +391,8 @@ export default function RoomPage({
             currentUserId={user?.id}
             mutedGuestIds={mutedGuestIds}
             onToggleGuestMute={setGuestAudioMuted}
+            messages={messages}
+            onSendMessage={handleSendMessage}
           />
           </div>
         </div>

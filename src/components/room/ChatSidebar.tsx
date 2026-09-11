@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Crown,
   Mic,
@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
-import { mockMessages } from "@/lib/mock-data";
 import { ChatMessage, Participant } from "@/types";
 
 const quickEmojis = ["😂", "❤️", "🔥", "😮", "👏", "🍿"];
@@ -32,6 +31,10 @@ interface ChatSidebarProps {
   currentUserId?: string | null;
   mutedGuestIds?: Set<string>;
   onToggleGuestMute?: (guestUserId: string, muted: boolean) => void;
+  // Chat itself: history + realtime messages live in RoomPage (it owns the
+  // socket connection), sent back down here rather than mocked locally.
+  messages: ChatMessage[];
+  onSendMessage: (text: string) => void;
 }
 
 export function ChatSidebar({
@@ -40,25 +43,22 @@ export function ChatSidebar({
   currentUserId,
   mutedGuestIds,
   onToggleGuestMute,
+  messages,
+  onSendMessage,
 }: ChatSidebarProps) {
   const [tab, setTab] = useState<"chat" | "people">("chat");
-  const [messages, setMessages] = useState<ChatMessage[]>(mockMessages);
   const [draft, setDraft] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
 
   function sendMessage(e: FormEvent) {
     e.preventDefault();
-    if (!draft.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `m-${Date.now()}`,
-        authorId: "1",
-        authorName: "You",
-        avatarColor: "from-violet-500 to-fuchsia-500",
-        message: draft.trim(),
-        timestamp: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-      },
-    ]);
+    const text = draft.trim();
+    if (!text) return;
+    onSendMessage(text);
     setDraft("");
   }
 
@@ -107,6 +107,7 @@ export function ChatSidebar({
                 </div>
               )
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="shrink-0 border-t border-white/10 p-3">

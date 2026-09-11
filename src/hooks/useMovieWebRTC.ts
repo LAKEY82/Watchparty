@@ -156,11 +156,16 @@ export function useMovieWebRTC({
       peer.onconnectionstatechange = () => {
         const state = peer.connectionState;
 
-        if (
-          state === "failed" ||
-          state === "closed" ||
-          state === "disconnected"
-        ) {
+        // "disconnected" is often transient — a momentary Wi-Fi blip or
+        // brief network hiccup, especially common on mobile — and the
+        // browser's own ICE agent frequently recovers it back to
+        // "connected" within a couple of seconds on its own. Tearing the
+        // whole connection down here (as we used to) turned every one of
+        // those blips into a visible failure needing a full reconnect,
+        // instead of letting the browser quietly ride it out. If it truly
+        // can't recover, the browser itself will move this to "failed" —
+        // that's the actual signal to give up and clean up.
+        if (state === "failed" || state === "closed") {
           closePeer(remoteUserId);
         }
 

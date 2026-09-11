@@ -1,6 +1,6 @@
 import { avatarColors } from "@/lib/mock-data";
 import { formatRelativeTime } from "@/lib/utils";
-import type { ApiParticipant, ApiRoom, Participant, Room } from "@/types";
+import type { ApiMessage, ApiParticipant, ApiRoom, ChatMessage, Participant, Room } from "@/types";
 
 // A fixed, small palette — picked by hash below — so these are plain
 // Tailwind arbitrary-value utilities (applied via className) rather than
@@ -30,6 +30,28 @@ export function mapApiParticipant(participant: ApiParticipant): Participant {
     micOn: participant.micOn,
     cameraOn: participant.cameraOn,
     status: "watching",
+  };
+}
+
+// The message document itself carries no avatar color (only a user id) —
+// hashed the same way mapApiParticipant falls back for a participant with
+// no explicit color, so the same person's messages and participant row
+// consistently land on the same color without a lookup against the
+// participant list.
+export function mapApiMessage(message: ApiMessage): ChatMessage {
+  return {
+    id: message._id,
+    authorId: message.author || "system",
+    authorName: message.authorName,
+    avatarColor: message.isSystem
+      ? ""
+      : avatarColors[hashString(message.author || message.authorName) % avatarColors.length],
+    message: message.text,
+    timestamp: new Date(message.createdAt).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+    isSystem: message.isSystem,
   };
 }
 
