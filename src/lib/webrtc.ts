@@ -1,18 +1,42 @@
 "use client";
 
 // STUN helps two browsers discover how to reach each other directly; it does
-// NOT relay media. Configurable via env so it can be swapped without a code
-// change. Some networks (symmetric NATs, restrictive corporate firewalls)
-// can't establish a direct path with STUN alone — those users would need a
-// TURN server (which *does* relay media, at a bandwidth/hosting cost) to
-// connect at all. No TURN server is configured here: that's a real MVP
-// limitation, not a bug, and the fix is operational, not a code change.
+// NOT relay media, and it isn't enough on its own — two peers behind the
+// same router can still fail to connect (no NAT hairpin support), and
+// client/AP isolation on a network blocks them outright regardless of NAT.
+// A TURN server is what actually relays media when a direct path isn't
+// possible, so anything beyond two tabs on one machine genuinely needs one.
+//
+// The default below is the Open Relay Project (metered.ca) — a free,
+// no-signup TURN service with shared public credentials. It's fair-use
+// rate-limited, not meant for heavy production traffic, but it's real TURN
+// and costs nothing to start with. Override NEXT_PUBLIC_TURN_URLS /
+// _USERNAME / _CREDENTIAL to switch to your own TURN account later —
+// nothing else in the code needs to change.
 function getIceServers(): RTCIceServer[] {
-  const raw = process.env.NEXT_PUBLIC_STUN_URLS;
-  const urls = raw
-    ? raw.split(",").map((u) => u.trim()).filter(Boolean)
+  const stunRaw = process.env.NEXT_PUBLIC_STUN_URLS;
+  const stunUrls = stunRaw
+    ? stunRaw.split(",").map((u) => u.trim()).filter(Boolean)
     : ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"];
-  return [{ urls }];
+
+  const turnRaw = process.env.NEXT_PUBLIC_TURN_URLS;
+  const turnUrls = turnRaw
+    ? turnRaw.split(",").map((u) => u.trim()).filter(Boolean)
+    : [
+        "turn:global.relay.metered.ca:80",
+        "turn:global.relay.metered.ca:80?transport=tcp",
+        "turn:global.relay.metered.ca:443",
+        "turns:global.relay.metered.ca:443?transport=tcp",
+      ];
+
+  return [
+    { urls: stunUrls },
+    {
+      urls: turnUrls,
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME || "openrelayproject",
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL || "openrelayproject",
+    },
+  ];
 }
 
 export interface PeerConnectionConfig {
