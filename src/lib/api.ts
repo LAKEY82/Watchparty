@@ -132,3 +132,13 @@ export function updatePlayback(
 export function getMessages(token: string, code: string) {
   return apiFetch<{ messages: ApiMessage[] }>(`/rooms/${code}/messages`, { token });
 }
+
+// --- WebRTC -----------------------------------------------------------
+
+// Proxied through our own backend rather than calling Metered directly —
+// see backend/src/controllers/turnController.js for why: the API key stays
+// server-side only, never in a NEXT_PUBLIC_ variable anyone could copy out
+// of the browser bundle. Returns [] (STUN-only) if TURN isn't configured.
+export function getTurnCredentials(token: string) {
+  return apiFetch<RTCIceServer[]>("/turn/credentials", { token });
+}

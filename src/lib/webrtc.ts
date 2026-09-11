@@ -7,36 +7,21 @@
 // A TURN server is what actually relays media when a direct path isn't
 // possible, so anything beyond two tabs on one machine genuinely needs one.
 //
-// The default below is the Open Relay Project (metered.ca) — a free,
-// no-signup TURN service with shared public credentials. It's fair-use
-// rate-limited, not meant for heavy production traffic, but it's real TURN
-// and costs nothing to start with. Override NEXT_PUBLIC_TURN_URLS /
-// _USERNAME / _CREDENTIAL to switch to your own TURN account later —
-// nothing else in the code needs to change.
-function getIceServers(): RTCIceServer[] {
-  const stunRaw = process.env.NEXT_PUBLIC_STUN_URLS;
-  const stunUrls = stunRaw
-    ? stunRaw.split(",").map((u) => u.trim()).filter(Boolean)
-    : ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"];
+// TURN credentials themselves aren't handled here: they're fetched from our
+// own backend (GET /api/turn/credentials, see useMovieWebRTC.ts), which in
+// turn holds the real TURN provider's API key server-side. That's the whole
+// point — a key that can mint TURN credentials against someone's account
+// must never sit in a NEXT_PUBLIC_ variable, where it'd be sitting in
+// plain text in the browser bundle for anyone to copy out and abuse.
+const DEFAULT_STUN_URLS = [
+  "stun:stun.l.google.com:19302",
+  "stun:stun1.l.google.com:19302",
+];
 
-  const turnRaw = process.env.NEXT_PUBLIC_TURN_URLS;
-  const turnUrls = turnRaw
-    ? turnRaw.split(",").map((u) => u.trim()).filter(Boolean)
-    : [
-        "turn:global.relay.metered.ca:80",
-        "turn:global.relay.metered.ca:80?transport=tcp",
-        "turn:global.relay.metered.ca:443",
-        "turns:global.relay.metered.ca:443?transport=tcp",
-      ];
-
-  return [
-    { urls: stunUrls },
-    {
-      urls: turnUrls,
-      username: process.env.NEXT_PUBLIC_TURN_USERNAME || "openrelayproject",
-      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL || "openrelayproject",
-    },
-  ];
+export function getStunServers(): RTCIceServer {
+  const raw = process.env.NEXT_PUBLIC_STUN_URLS;
+  const urls = raw ? raw.split(",").map((u) => u.trim()).filter(Boolean) : DEFAULT_STUN_URLS;
+  return { urls };
 }
 
 export interface PeerConnectionConfig {
@@ -44,7 +29,7 @@ export interface PeerConnectionConfig {
 }
 
 export function createPeerConnection(config?: PeerConnectionConfig): RTCPeerConnection {
-  return new RTCPeerConnection({ iceServers: (config ?? { iceServers: getIceServers() }).iceServers });
+  return new RTCPeerConnection({ iceServers: config?.iceServers ?? [getStunServers()] });
 }
 
 export async function createOffer(peer: RTCPeerConnection): Promise<RTCSessionDescriptionInit> {

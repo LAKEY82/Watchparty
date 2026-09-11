@@ -8,15 +8,21 @@ import {
   createOffer,
   createPeerConnection,
   getMovieStream,
+  getStunServers,
   setRemoteDescription,
   type MovieCapture,
 } from "@/lib/webrtc";
+import { getTurnCredentials } from "@/lib/api";
 
 interface UseMovieWebRTCOptions {
   socket: Socket | null;
   roomCode: string;
   isHost: boolean;
   userId: string | null;
+  // Needed to ask our own backend for TURN credentials (see getIceServers
+  // below) — that endpoint is authenticated so it can't be hammered by
+  // anyone who isn't a logged-in user of this app.
+  token: string | null;
   // A ref, not the element itself — refs must only be read inside effects/
   // callbacks, never during render, and this hook is called during render
   // (it's invoked directly in VideoPlayer's function body). Passing the ref
@@ -52,6 +58,7 @@ export function useMovieWebRTC({
   roomCode,
   isHost,
   userId,
+  token,
   videoRef,
 }: UseMovieWebRTCOptions) {
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
@@ -76,6 +83,11 @@ export function useMovieWebRTC({
   // otherwise, and disabling a track disables it everywhere it's used.
   const guestAudioTracksRef = useRef<Map<string, MediaStreamTrack>>(new Map());
 
+  // Fetched once and cached for the lifetime of this hook instance (one
+  // room visit) — see getIceServersForPeer below. A ref rather than state
+  // since nothing needs to re-render when this resolves.
+  const iceServersRef = useRef<RTCIceServer[] | null>(null);
+
   const [connectedPeers, setConnectedPeers] = useState<string[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [supported, setSupported] = useState(true);
@@ -89,6 +101,32 @@ export function useMovieWebRTC({
   const updatePeers = useCallback(() => {
     setConnectedPeers(Array.from(peersRef.current.keys()));
   }, []);
+
+  // STUN alone often isn't enough once host and guest are on different
+  // networks (or even the same Wi-Fi, if the router lacks NAT hairpin
+  // support or has client isolation on) — that needs a TURN server. TURN
+  // credentials are fetched from our OWN backend, authenticated, rather
+  // than straight from the TURN provider: that's what keeps its API key
+  // out of the browser bundle (see lib/webrtc.ts and turnController.js).
+  const getIceServersForPeer = useCallback(async (): Promise<RTCIceServer[]> => {
+    if (iceServersRef.current) {
+      return iceServersRef.current;
+    }
+
+    let turnServers: RTCIceServer[] = [];
+    if (token) {
+      try {
+        turnServers = await getTurnCredentials(token);
+      } catch {
+        // Backend unreachable, or TURN isn't configured there — fall back
+        // to STUN-only rather than blocking the connection attempt.
+      }
+    }
+
+    const servers = [getStunServers(), ...turnServers];
+    iceServersRef.current = servers;
+    return servers;
+  }, [token]);
 
   const closePeer = useCallback(
     (userIdToRemove: string) => {
@@ -132,14 +170,15 @@ export function useMovieWebRTC({
   );
 
   const getPeer = useCallback(
-    (remoteUserId: string) => {
+    async (remoteUserId: string) => {
       const existing = peersRef.current.get(remoteUserId);
 
       if (existing) {
         return existing;
       }
 
-      const peer = createPeerConnection();
+      const iceServers = await getIceServersForPeer();
+      const peer = createPeerConnection({ iceServers });
 
       peer.onicecandidate = (event) => {
         if (!event.candidate || !socket) {
@@ -228,6 +267,7 @@ export function useMovieWebRTC({
       videoRef,
       closePeer,
       updatePeers,
+      getIceServersForPeer,
     ],
   );
 
@@ -290,7 +330,7 @@ const startHostStreaming = useCallback(
       stream = capture.stream;
     }
 
-    const peer = getPeer(guestUserId);
+    const peer = await getPeer(guestUserId);
 
     const existingTrackIds = new Set(
       peer
@@ -400,7 +440,7 @@ const startHostStreaming = useCallback(
       const hostUserId = payload.fromUserId;
 
       try {
-        const peer = getPeer(hostUserId);
+        const peer = await getPeer(hostUserId);
 
         await setRemoteDescription(peer, payload.offer);
 

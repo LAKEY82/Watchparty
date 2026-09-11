@@ -74,6 +74,7 @@ export default function RoomPage({
     roomCode: code,
     isHost,
     userId: user?.id || null,
+    token,
     videoRef,
   });
 
