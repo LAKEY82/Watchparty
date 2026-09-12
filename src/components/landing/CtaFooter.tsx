@@ -37,7 +37,7 @@ export function Footer() {
     <footer className="border-t border-white/10 px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
         <Logo />
-        <p className="text-sm text-muted">© 2026 ReelSync. All rights reserved.</p>
+        <p className="text-sm text-muted">© 2026 Watchly. All rights reserved.</p>
         <div className="flex items-center gap-5 text-sm text-muted">
           <a href="#" className="hover:text-foreground">Privacy</a>
           <a href="#" className="hover:text-foreground">Terms</a>

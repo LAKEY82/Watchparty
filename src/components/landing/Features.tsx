@@ -24,7 +24,7 @@ const features = [
     icon: MonitorPlay,
     title: "Any source, one room",
     description:
-      "Stream from your favorite service or upload your own file — ReelSync keeps the room in sync either way.",
+      "Upload your own file and Watchly keeps everyone in the room perfectly in sync.",
   },
   {
     icon: Users,
@@ -45,7 +45,7 @@ export function Features() {
     <section id="features" className="relative mx-auto max-w-6xl px-4 py-24">
       <div className="mx-auto mb-14 max-w-2xl text-center">
         <p className="text-sm font-medium uppercase tracking-widest text-accent">
-          Why ReelSync
+          Why Watchly
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
           Everything you need for the perfect movie night

@@ -25,7 +25,7 @@ export function Hero() {
         </h1>
 
         <p className="mt-6 max-w-xl text-balance text-base text-muted opacity-0 animate-fade-in-up [animation-delay:160ms] sm:text-lg">
-          Create a room, share a link, and press play. ReelSync keeps everyone
+          Create a room, share a link, and press play. Watchly keeps everyone
           in perfect sync with live chat, voice, and video — like you&apos;re
           in the same room.
         </p>

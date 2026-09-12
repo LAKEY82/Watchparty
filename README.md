@@ -1,4 +1,4 @@
-# ReelSync — Watch Party Frontend
+# Watchly — Watch Party Frontend
 
 A modern, premium watch-party web app where people can create or join rooms and watch movies together in perfect sync. Dark, cinematic UI with glassmorphism accents.
 

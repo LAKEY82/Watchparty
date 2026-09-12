@@ -6,12 +6,10 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
-  Film,
   Globe2,
   Loader2,
   Lock,
   Sparkles,
-  Upload,
   Users,
 } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -22,33 +20,12 @@ import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/hooks/useAuth";
 import { ApiError, createRoom } from "@/lib/api";
 
-const sourceTabs = [
-  { id: "url", label: "Paste URL", icon: Globe2 },
-  { id: "upload", label: "Upload file", icon: Upload },
-  { id: "library", label: "From library", icon: Film },
-] as const;
-
-const libraryTitles = ["Nocturne Drive", "Glass Horizon", "Cipher Room", "The Long Reel"];
-
-// One fixed gradient per library slot — a static, known set, so these are
-// plain Tailwind arbitrary-value utilities rather than a runtime style object.
-const libraryTileGradients = [
-  "[background:linear-gradient(160deg,hsl(260_70%_45%_/_0.6),hsl(320_70%_35%_/_0.5))]",
-  "[background:linear-gradient(160deg,hsl(330_70%_45%_/_0.6),hsl(390_70%_35%_/_0.5))]",
-  "[background:linear-gradient(160deg,hsl(400_70%_45%_/_0.6),hsl(460_70%_35%_/_0.5))]",
-  "[background:linear-gradient(160deg,hsl(470_70%_45%_/_0.6),hsl(530_70%_35%_/_0.5))]",
-];
-
 export default function CreateRoomPage() {
   const router = useRouter();
   const { token, ready } = useRequireAuth();
 
   const [title, setTitle] = useState("Friday Movie Night");
   const [movieName, setMovieName] = useState("");
-  const [source, setSource] = useState<(typeof sourceTabs)[number]["id"]>("url");
-  const [movieUrl, setMovieUrl] = useState("");
-  const [uploadFileName, setUploadFileName] = useState("");
-  const [libraryTitle, setLibraryTitle] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -64,15 +41,17 @@ export default function CreateRoomPage() {
     setError(null);
     setLoading(true);
 
-    const movieSource =
-      source === "url" ? movieUrl : source === "upload" ? uploadFileName : libraryTitle;
-
     try {
+      // The host picks their movie file from inside the room itself, once
+      // it exists — see VideoPlayer's "Select your movie" step. There's
+      // nothing to ask for here, so this always creates an "upload" room:
+      // no movieSource URL to collect, and it's what makes the host's
+      // local file get streamed to guests over WebRTC rather than every
+      // guest needing the same file themselves.
       const { room } = await createRoom(token, {
         title,
         movieName,
-        movieSource,
-        sourceType: source,
+        sourceType: "upload",
         isPrivate,
         maxGuests,
         chatEnabled,
@@ -139,80 +118,10 @@ export default function CreateRoomPage() {
                 value={movieName}
                 onChange={(e) => setMovieName(e.target.value)}
               />
-            </div>
-
-            <div>
-              <Label>Movie source</Label>
-              <div className="mb-3 grid grid-cols-3 gap-2 rounded-xl bg-white/5 p-1">
-                {sourceTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setSource(tab.id)}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-all sm:text-sm",
-                      source === tab.id
-                        ? "bg-white/10 text-foreground shadow-sm"
-                        : "text-muted hover:text-foreground"
-                    )}
-                  >
-                    <tab.icon className="h-3.5 w-3.5" />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {source === "url" && (
-                <Input
-                  placeholder="https://example.com/movie.mp4"
-                  required
-                  value={movieUrl}
-                  onChange={(e) => setMovieUrl(e.target.value)}
-                />
-              )}
-              {source === "upload" && (
-                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-8 text-center transition-colors hover:border-accent/50 hover:bg-white/5">
-                  <Upload className="h-5 w-5 text-muted" />
-                  <span className="text-sm text-muted">
-                    {uploadFileName ? (
-                      uploadFileName
-                    ) : (
-                      <>
-                        Drag & drop a video file, or <span className="text-accent">browse</span>
-                      </>
-                    )}
-                  </span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="video/*"
-                    onChange={(e) => setUploadFileName(e.target.files?.[0]?.name || "")}
-                  />
-                </label>
-              )}
-              {source === "library" && (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {libraryTitles.map((libTitle, i) => (
-                    <button
-                      key={libTitle}
-                      type="button"
-                      onClick={() => {
-                        setLibraryTitle(libTitle);
-                        setMovieName(libTitle);
-                      }}
-                      className={cn(
-                        "group relative aspect-2/3 overflow-hidden rounded-lg border transition-transform hover:-translate-y-1",
-                        libraryTileGradients[i % libraryTileGradients.length],
-                        libraryTitle === libTitle ? "border-accent" : "border-white/10"
-                      )}
-                    >
-                      <span className="absolute inset-x-0 bottom-0 bg-black/50 p-1.5 text-left text-[10px] leading-tight text-white">
-                        {libTitle}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <p className="mt-1.5 text-xs text-muted">
+                Just a label for the room — you&apos;ll pick the actual movie file once you&apos;re
+                inside.
+              </p>
             </div>
 
             <div>

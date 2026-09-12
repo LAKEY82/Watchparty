@@ -1,14 +1,19 @@
-import { Clapperboard } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("group flex items-center gap-2 select-none", className)}>
-      <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/30">
-        <Clapperboard className="h-4 w-4 text-white" strokeWidth={2.25} />
-      </span>
+      <Image
+        src="/Images/watchly-mark.png"
+        alt=""
+        width={32}
+        height={32}
+        className="h-8 w-8"
+        priority
+      />
       <span className="text-lg font-semibold tracking-tight">
-        Reel<span className="text-gradient">Sync</span>
+        Watch<span className="text-gradient">ly</span>
       </span>
     </span>
   );

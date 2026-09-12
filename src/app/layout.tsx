@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReelSync — Watch movies together, in perfect sync",
+  title: "Watchly — Watch movies together, in perfect sync",
   description:
     "Create or join a room and watch movies together in perfect synchronization, with live chat, voice, and video.",
 };
