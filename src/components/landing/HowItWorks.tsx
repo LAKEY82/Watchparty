@@ -5,7 +5,7 @@ const steps = [
     icon: UserPlus,
     step: "01",
     title: "Create your room",
-    description: "Pick a movie source, name your room, and set who can join.",
+    description: "Name your room and set who can join — pick the movie once you're inside.",
   },
   {
     icon: Link2,
@@ -34,12 +34,12 @@ export function HowItWorks() {
       </div>
 
       <div className="relative grid gap-8 sm:grid-cols-3">
-        <div className="absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent sm:block" />
+        <div className="absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-black/10 to-transparent sm:block" />
         {steps.map((step) => (
           <div key={step.step} className="relative flex flex-col items-center text-center">
-            <div className="relative z-10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-background-elevated shadow-lg shadow-black/40">
+            <div className="relative z-10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-black/10 bg-background-elevated shadow-lg shadow-black/10">
               <step.icon className="h-6 w-6 text-accent" />
-              <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[11px] font-bold text-white">
+              <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-white">
                 {step.step}
               </span>
             </div>

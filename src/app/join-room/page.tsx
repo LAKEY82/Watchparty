@@ -99,9 +99,9 @@ export default function JoinRoomPage() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
 
-            <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-xs text-muted">
+            <div className="flex items-center gap-2 rounded-xl border border-dashed border-black/15 px-4 py-3 text-xs text-muted">
               <Link2 className="h-3.5 w-3.5 shrink-0" />
-              Room links look like reelsync.app/join/NEON482
+              Room links look like watchly.app/join/NEON482
             </div>
           </GlassPanel>
         </form>
@@ -114,7 +114,7 @@ export default function JoinRoomPage() {
                 <Link
                   key={room.id}
                   href={`/room/${room.code}`}
-                  className="glass flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-white/8"
+                  className="glass flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-black/8"
                 >
                   <div className={cn("h-10 w-10 shrink-0 rounded-lg", room.posterClassName)} />
                   <div className="min-w-0 flex-1">

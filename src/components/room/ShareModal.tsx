@@ -16,7 +16,7 @@ export function ShareModal({
 }) {
   const [copied, setCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
-  const link = `reelsync.app/join/${roomCode}`;
+  const link = `watchly.app/join/${roomCode}`;
 
   function copy(value: string, setter: (v: boolean) => void) {
     navigator.clipboard?.writeText(value).catch(() => {});
@@ -33,7 +33,7 @@ export function ShareModal({
       <div className="mb-4">
         <label className="mb-1.5 block text-xs font-medium text-muted">Invite link</label>
         <div className="flex items-center gap-2">
-          <div className="flex h-11 flex-1 items-center truncate rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-foreground/90">
+          <div className="flex h-11 flex-1 items-center truncate rounded-xl border border-black/10 bg-black/5 px-3.5 text-sm text-foreground/90">
             {link}
           </div>
           <Button
@@ -51,7 +51,7 @@ export function ShareModal({
       <div className="mb-6">
         <label className="mb-1.5 block text-xs font-medium text-muted">Room code</label>
         <div className="flex items-center gap-2">
-          <div className="flex h-11 flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg font-semibold tracking-[0.3em] text-foreground">
+          <div className="flex h-11 flex-1 items-center justify-center rounded-xl border border-black/10 bg-black/5 text-lg font-semibold tracking-[0.3em] text-foreground">
             {roomCode}
           </div>
           <Button
@@ -67,13 +67,13 @@ export function ShareModal({
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <button className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 py-3 text-xs text-muted transition-colors hover:bg-white/5 hover:text-foreground">
+        <button className="flex flex-col items-center gap-1.5 rounded-xl border border-black/10 py-3 text-xs text-muted transition-colors hover:bg-black/5 hover:text-foreground">
           <MessageCircle className="h-4 w-4" /> Message
         </button>
-        <button className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 py-3 text-xs text-muted transition-colors hover:bg-white/5 hover:text-foreground">
+        <button className="flex flex-col items-center gap-1.5 rounded-xl border border-black/10 py-3 text-xs text-muted transition-colors hover:bg-black/5 hover:text-foreground">
           <Mail className="h-4 w-4" /> Email
         </button>
-        <button className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 py-3 text-xs text-muted transition-colors hover:bg-white/5 hover:text-foreground">
+        <button className="flex flex-col items-center gap-1.5 rounded-xl border border-black/10 py-3 text-xs text-muted transition-colors hover:bg-black/5 hover:text-foreground">
           <Share2 className="h-4 w-4" /> Share
         </button>
       </div>

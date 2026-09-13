@@ -17,7 +17,7 @@ export function DashboardNav({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-black/10 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
         <Logo />
 
@@ -26,7 +26,7 @@ export function DashboardNav({
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-white/10 hover:text-foreground">
+          <button className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/10 hover:text-foreground">
             <Bell className="h-4 w-4" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger" />
           </button>
@@ -34,7 +34,7 @@ export function DashboardNav({
           <div className="relative">
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-full p-0.5 pr-1 transition-colors hover:bg-white/10"
+              className="flex items-center gap-2 rounded-full p-0.5 pr-1 transition-colors hover:bg-black/10"
             >
               <Avatar
                 name={user?.name || "Guest"}
@@ -49,11 +49,11 @@ export function DashboardNav({
                   <p className="truncate text-sm font-medium">{user?.name || "Guest"}</p>
                   <p className="truncate text-xs text-muted">{user?.email || ""}</p>
                 </div>
-                <div className="my-1 h-px bg-white/10" />
-                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-foreground">
+                <div className="my-1 h-px bg-black/10" />
+                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-black/5 hover:text-foreground">
                   <UserIcon className="h-4 w-4" /> Profile
                 </button>
-                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-foreground">
+                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-black/5 hover:text-foreground">
                   <Settings className="h-4 w-4" /> Settings
                 </button>
                 <button

@@ -111,7 +111,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center text-sm text-muted">
+                <div className="rounded-2xl border border-dashed border-black/10 py-16 text-center text-sm text-muted">
                   No rooms yet — create one or join with a room code to get started.
                 </div>
               )}

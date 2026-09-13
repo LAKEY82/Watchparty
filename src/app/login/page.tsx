@@ -109,7 +109,7 @@ export default function LoginPage() {
         </div>
 
         <label className="flex items-center gap-2 text-sm text-muted">
-          <input type="checkbox" className="h-4 w-4 rounded border-white/20 bg-white/5 accent-accent" />
+          <input type="checkbox" className="h-4 w-4 rounded border-black/20 bg-black/5 accent-accent" />
           Remember me for 30 days
         </label>
 
@@ -119,7 +119,7 @@ export default function LoginPage() {
 
         <div className="relative py-2 text-center text-xs text-muted">
           <span className="relative bg-transparent px-2">or continue with</span>
-          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-white/10" />
+          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-black/10" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">

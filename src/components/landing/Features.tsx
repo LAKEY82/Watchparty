@@ -56,10 +56,10 @@ export function Features() {
         {features.map((feature, i) => (
           <GlassPanel
             key={feature.title}
-            className="group p-6 opacity-0 animate-fade-in-up transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.07]"
+            className="group p-6 opacity-0 animate-fade-in-up transition-transform duration-300 hover:-translate-y-1 hover:bg-black/[0.07]"
             style={{ animationDelay: `${i * 80}ms` }}
           >
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-accent transition-transform group-hover:scale-110">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-accent/12 text-accent transition-transform group-hover:scale-110">
               <feature.icon className="h-5 w-5" />
             </div>
             <h3 className="mb-2 text-base font-semibold">{feature.title}</h3>

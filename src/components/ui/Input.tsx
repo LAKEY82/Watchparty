@@ -18,8 +18,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={cn(
-            "w-full h-11 rounded-xl bg-white/5 border border-white/10 px-4 text-sm text-foreground placeholder:text-muted outline-none transition-all",
-            "focus:border-accent/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-accent/10",
+            "w-full h-11 rounded-xl bg-black/5 border border-black/10 px-4 text-sm text-foreground placeholder:text-muted outline-none transition-all",
+            "focus:border-accent/60 focus:bg-black/[0.07] focus:ring-4 focus:ring-accent/10",
             icon && "pl-10",
             endAdornment && "pr-11",
             className

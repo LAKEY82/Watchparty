@@ -12,7 +12,7 @@ export function StatsRow() {
     <div className="grid grid-cols-3 gap-3 sm:gap-4">
       {stats.map((stat) => (
         <GlassPanel key={stat.label} className="flex items-center gap-3 p-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-accent">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/10 text-accent">
             <stat.icon className="h-4 w-4" />
           </div>
           <div className="min-w-0">

@@ -60,7 +60,7 @@ export function ParticipantAvatar({
         <span
           className={cn(
             "absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-background",
-            participant.micOn ? "bg-emerald-500" : "bg-white/20"
+            participant.micOn ? "bg-emerald-500" : "bg-black/20"
           )}
         >
           {participant.micOn ? (

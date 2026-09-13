@@ -23,10 +23,10 @@ export function RoomHeader({
   onShowPeople: () => void;
 }) {
   return (
-    <header className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-background/70 px-4 py-3 backdrop-blur-xl sm:px-6">
+    <header className="flex shrink-0 items-center gap-3 border-b border-black/10 bg-background/70 px-4 py-3 backdrop-blur-xl sm:px-6">
       <Link
         href="/dashboard"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-white/10 hover:text-foreground"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/10 hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
       </Link>
@@ -55,7 +55,7 @@ export function RoomHeader({
           <Avatar key={p.id} name={p.name} color={p.avatarColor} size="sm" ring />
         ))}
         {participants.length > 4 && (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[11px] font-medium ring-2 ring-background">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-[11px] font-medium ring-2 ring-background">
             +{participants.length - 4}
           </div>
         )}
@@ -63,7 +63,7 @@ export function RoomHeader({
 
       <button
         onClick={onShowPeople}
-        className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-muted hover:text-foreground sm:hidden"
+        className="flex items-center gap-1.5 rounded-full bg-black/10 px-3 py-1.5 text-xs text-muted hover:text-foreground sm:hidden"
       >
         <Users2 className="h-3.5 w-3.5" />
         {participants.length}
@@ -77,7 +77,7 @@ export function RoomHeader({
         variant="ghost"
         size="icon"
         onClick={onSettings}
-        className="border border-white/10"
+        className="border border-black/10"
       >
         <Settings className="h-4 w-4" />
       </Button>

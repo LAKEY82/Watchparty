@@ -26,7 +26,7 @@ export function MediaDock({
   onOpenSettings: () => void;
 }) {
   return (
-    <div className="glass-strong flex items-center gap-1.5 rounded-2xl p-2 shadow-2xl shadow-black/40 sm:gap-2">
+    <div className="glass-strong flex items-center gap-1.5 rounded-2xl p-2 shadow-2xl shadow-black/15 sm:gap-2">
       <DockButton active={micOn} onClick={onToggleMic} label={micOn ? "Mute mic" : "Unmute mic"}>
         {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
       </DockButton>
@@ -47,7 +47,7 @@ export function MediaDock({
         <Settings className="h-4 w-4" />
       </DockButton>
 
-      <div className="mx-1 h-6 w-px bg-white/10" />
+      <div className="mx-1 h-6 w-px bg-black/10" />
 
       <Link
         href="/dashboard"
@@ -78,7 +78,7 @@ function DockButton({
       aria-label={label}
       className={cn(
         "flex h-11 w-11 items-center justify-center rounded-xl transition-all",
-        active ? "bg-white/10 text-foreground hover:bg-white/15" : "bg-danger/90 text-white hover:bg-danger"
+        active ? "bg-black/10 text-foreground hover:bg-black/15" : "bg-danger/90 text-white hover:bg-danger"
       )}
     >
       {children}

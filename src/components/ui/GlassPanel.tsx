@@ -13,10 +13,10 @@ export function Badge({
   variant?: "default" | "live" | "success" | "outline";
 }) {
   const variants = {
-    default: "bg-white/10 text-foreground",
+    default: "bg-black/10 text-foreground",
     live: "bg-danger/15 text-danger",
     success: "bg-success/15 text-success",
-    outline: "border border-white/15 text-muted",
+    outline: "border border-black/15 text-muted",
   };
   return (
     <span

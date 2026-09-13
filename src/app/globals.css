@@ -1,18 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07070b;
-  --background-elevated: #0d0d13;
-  --foreground: #f4f4f6;
-  --muted: #8b8b96;
-  --border: rgba(255, 255, 255, 0.08);
+  --background: #ffffff;
+  --background-elevated: #faf8fc;
+  --foreground: #1c1424;
+  --muted: #6b6572;
+  --border: rgba(20, 8, 35, 0.09);
 
-  --accent: #8b5cf6;
-  --accent-2: #ec4899;
-  --accent-3: #6366f1;
-  --success: #22c55e;
-  --danger: #f43f5e;
-  --warning: #f59e0b;
+  /* Brand purple, monochromatic — accent-2/3 are tints/shades of the same
+     #8E31DD rather than a second hue, per "theme color be #8E31DD and
+     white, mostly white." */
+  --accent: #8e31dd;
+  --accent-2: #b565f0;
+  --accent-3: #6a1fb0;
+  --success: #16a34a;
+  --danger: #e11d48;
+  --warning: #d97706;
 }
 
 @theme inline {
@@ -103,7 +106,7 @@
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
@@ -116,7 +119,7 @@
      the one place hand-written CSS is unavoidable rather than a choice. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+    scrollbar-color: rgba(20, 8, 35, 0.18) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -125,12 +128,12 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(20, 8, 35, 0.14);
     border-radius: 999px;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.24);
+    background: rgba(20, 8, 35, 0.24);
   }
 
   input[type="range"] {
@@ -143,7 +146,7 @@
   input[type="range"]::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(20, 8, 35, 0.12);
   }
 
   input[type="range"]::-webkit-slider-thumb {
@@ -153,8 +156,8 @@
     width: 14px;
     height: 14px;
     border-radius: 999px;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.5);
+    background: #8e31dd;
+    box-shadow: 0 0 0 3px rgba(142, 49, 221, 0.25);
     transition: transform 0.15s ease;
   }
 
@@ -165,7 +168,7 @@
   input[type="range"]::-moz-range-track {
     height: 4px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(20, 8, 35, 0.12);
   }
 
   input[type="range"]::-moz-range-thumb {
@@ -173,8 +176,8 @@
     height: 14px;
     border: none;
     border-radius: 999px;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.5);
+    background: #8e31dd;
+    box-shadow: 0 0 0 3px rgba(142, 49, 221, 0.25);
   }
 }
 
@@ -183,17 +186,13 @@
    up variants (hover:, sm:, etc.) automatically, unlike a bare CSS class. */
 
 @utility bg-cinema {
-  @apply [background:radial-gradient(ellipse_80%_60%_at_20%_-10%,rgba(139,92,246,0.18),transparent_60%),radial-gradient(ellipse_70%_50%_at_100%_0%,rgba(236,72,153,0.14),transparent_55%),radial-gradient(ellipse_60%_60%_at_50%_120%,rgba(99,102,241,0.12),transparent_60%),var(--color-background)];
+  @apply bg-background;
 }
 
 @utility glass {
-  @apply border border-white/8 bg-white/5 backdrop-blur-[20px] backdrop-saturate-[1.4];
+  @apply border border-black/8 bg-background-elevated/90 shadow-[0_1px_3px_rgba(20,8,35,0.05)] backdrop-blur-[20px] backdrop-saturate-[1.4];
 }
 
 @utility glass-strong {
-  @apply border border-white/10 bg-[rgba(13,13,19,0.72)] backdrop-blur-[24px] backdrop-saturate-[1.6];
-}
-
-@utility text-gradient {
-  @apply bg-gradient-to-r from-violet-400 via-pink-400 via-60% to-orange-400 bg-clip-text text-transparent;
+  @apply border border-black/10 bg-background-elevated/95 shadow-[0_8px_24px_rgba(20,8,35,0.08)] backdrop-blur-[24px] backdrop-saturate-[1.6];
 }

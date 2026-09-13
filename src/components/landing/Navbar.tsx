@@ -61,12 +61,12 @@ export function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-white/5 hover:text-foreground"
+              className="rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-black/5 hover:text-foreground"
             >
               {link.label}
             </a>
           ))}
-          <div className="my-1 h-px bg-white/10" />
+          <div className="my-1 h-px bg-black/10" />
           <Link href="/login" onClick={() => setOpen(false)}>
             <Button variant="ghost" className="w-full justify-center">
               Log in

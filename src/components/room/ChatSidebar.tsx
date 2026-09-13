@@ -64,12 +64,12 @@ export function ChatSidebar({
 
   return (
     <div className="glass-strong flex h-full min-h-0 flex-col rounded-2xl">
-      <div className="flex shrink-0 items-center gap-1 border-b border-white/10 p-2">
+      <div className="flex shrink-0 items-center gap-1 border-b border-black/10 p-2">
         <button
           onClick={() => setTab("chat")}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-medium transition-colors",
-            tab === "chat" ? "bg-white/10 text-foreground" : "text-muted hover:text-foreground"
+            tab === "chat" ? "bg-black/10 text-foreground" : "text-muted hover:text-foreground"
           )}
         >
           <MessageSquare className="h-4 w-4" /> Chat
@@ -78,11 +78,11 @@ export function ChatSidebar({
           onClick={() => setTab("people")}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-medium transition-colors",
-            tab === "people" ? "bg-white/10 text-foreground" : "text-muted hover:text-foreground"
+            tab === "people" ? "bg-black/10 text-foreground" : "text-muted hover:text-foreground"
           )}
         >
           <Users className="h-4 w-4" /> People
-          <span className="rounded-full bg-white/10 px-1.5 text-xs">{participants.length}</span>
+          <span className="rounded-full bg-black/10 px-1.5 text-xs">{participants.length}</span>
         </button>
       </div>
 
@@ -110,7 +110,7 @@ export function ChatSidebar({
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="shrink-0 border-t border-white/10 p-3">
+          <div className="shrink-0 border-t border-black/10 p-3">
             <div className="mb-2 flex items-center gap-1">
               {quickEmojis.map((emoji) => (
                 <button
@@ -128,13 +128,13 @@ export function ChatSidebar({
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder="Send a message…"
-                  className="h-10 w-full rounded-xl bg-white/5 border border-white/10 pl-3.5 pr-9 text-sm outline-none placeholder:text-muted focus:border-accent/60 focus:bg-white/[0.07]"
+                  className="h-10 w-full rounded-xl bg-black/5 border border-black/10 pl-3.5 pr-9 text-sm outline-none placeholder:text-muted focus:border-accent/60 focus:bg-black/[0.07]"
                 />
                 <Smile className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               </div>
               <button
                 type="submit"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white transition-transform hover:scale-105 active:scale-95"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white transition-transform hover:scale-105 active:scale-95"
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -146,7 +146,7 @@ export function ChatSidebar({
           {participants.map((p) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-white/5"
+              className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-black/5"
             >
               <div className="relative">
                 <Avatar name={p.name} color={p.avatarColor} size="sm" />
@@ -182,7 +182,7 @@ export function ChatSidebar({
                       "flex h-6 w-6 items-center justify-center rounded-full transition-colors",
                       mutedGuestIds?.has(p.id)
                         ? "bg-danger/20 text-danger"
-                        : "hover:bg-white/10 hover:text-foreground"
+                        : "hover:bg-black/10 hover:text-foreground"
                     )}
                   >
                     {mutedGuestIds?.has(p.id) ? (

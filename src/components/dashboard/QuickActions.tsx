@@ -6,7 +6,7 @@ export function QuickActions() {
     <div className="grid gap-4 sm:grid-cols-2">
       <Link
         href="/create-room"
-        className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-6 shadow-lg shadow-fuchsia-500/20 transition-transform hover:-translate-y-1"
+        className="group relative overflow-hidden rounded-2xl bg-accent p-6 shadow-lg shadow-accent/20 transition-transform hover:-translate-y-1"
       >
         <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
         <div className="mb-8 flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
@@ -24,9 +24,9 @@ export function QuickActions() {
 
       <Link
         href="/join-room"
-        className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition-all hover:-translate-y-1 hover:bg-white/[0.08]"
+        className="group relative overflow-hidden rounded-2xl border border-black/10 bg-black/5 p-6 transition-all hover:-translate-y-1 hover:bg-black/[0.08]"
       >
-        <div className="mb-8 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
+        <div className="mb-8 flex h-11 w-11 items-center justify-center rounded-xl bg-black/10">
           <KeyRound className="h-5 w-5 text-accent" />
         </div>
         <h3 className="mb-1 text-lg font-semibold">Join a room</h3>

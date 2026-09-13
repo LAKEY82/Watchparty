@@ -1,7 +1,7 @@
 import type { ApiUser } from "@/types";
 
-const TOKEN_KEY = "reelsync.token";
-const USER_KEY = "reelsync.user";
+const TOKEN_KEY = "watchly.token";
+const USER_KEY = "watchly.user";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;

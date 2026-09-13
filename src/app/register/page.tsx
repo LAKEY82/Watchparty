@@ -149,7 +149,7 @@ export default function RegisterPage() {
           <input
             type="checkbox"
             required
-            className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 accent-accent"
+            className="mt-0.5 h-4 w-4 rounded border-black/20 bg-black/5 accent-accent"
           />
           I agree to the{" "}
           <a href="#" className="text-foreground hover:text-accent">
@@ -167,7 +167,7 @@ export default function RegisterPage() {
 
         <div className="relative py-2 text-center text-xs text-muted">
           <span className="relative bg-transparent px-2">or continue with</span>
-          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-white/10" />
+          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-black/10" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">

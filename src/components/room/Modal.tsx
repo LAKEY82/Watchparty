@@ -49,7 +49,7 @@ export function Modal({
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-white/10 hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/10 hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>

@@ -366,7 +366,7 @@ export default function RoomPage({
         {/* Mobile chat toggle */}
         <button
           onClick={() => setMobileChatOpen(true)}
-          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-foreground backdrop-blur-md lg:hidden"
+          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-black/10 text-foreground backdrop-blur-md lg:hidden"
         >
           <MessageSquare className="h-4 w-4" />
         </button>
@@ -382,7 +382,7 @@ export default function RoomPage({
           <div className="relative flex h-full w-full max-w-sm flex-col p-3 animate-fade-in-up">
             <button
               onClick={() => setMobileChatOpen(false)}
-              className="absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-foreground"
+              className="absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-foreground"
             >
               <X className="h-4 w-4" />
             </button>

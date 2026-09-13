@@ -7,7 +7,7 @@ export function CtaSection() {
   return (
     <section id="pricing" className="relative mx-auto max-w-6xl px-4 pb-24">
       <div className="glass-strong relative overflow-hidden rounded-3xl px-6 py-16 text-center sm:px-16">
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-130 -translate-x-1/2 rounded-full [background:radial-gradient(closest-side,rgba(139,92,246,0.4),transparent)] opacity-50 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-130 -translate-x-1/2 rounded-full bg-accent/10 opacity-70 blur-3xl" />
         <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl">
           Your next movie night is one link away
         </h2>
@@ -34,7 +34,7 @@ export function CtaSection() {
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 px-4 py-10">
+    <footer className="border-t border-black/10 px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
         <Logo />
         <p className="text-sm text-muted">© 2026 Watchly. All rights reserved.</p>

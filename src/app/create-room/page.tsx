@@ -132,7 +132,7 @@ export default function CreateRoomPage() {
                   onClick={() => setIsPrivate(true)}
                   className={cn(
                     "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors",
-                    isPrivate ? "border-accent/60 bg-accent/10" : "border-white/10 hover:bg-white/5"
+                    isPrivate ? "border-accent/60 bg-accent/10" : "border-black/10 hover:bg-black/5"
                   )}
                 >
                   <Lock className="h-4 w-4 text-accent" />
@@ -146,7 +146,7 @@ export default function CreateRoomPage() {
                   onClick={() => setIsPrivate(false)}
                   className={cn(
                     "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors",
-                    !isPrivate ? "border-accent/60 bg-accent/10" : "border-white/10 hover:bg-white/5"
+                    !isPrivate ? "border-accent/60 bg-accent/10" : "border-black/10 hover:bg-black/5"
                   )}
                 >
                   <Globe2 className="h-4 w-4 text-accent" />
@@ -175,7 +175,7 @@ export default function CreateRoomPage() {
               />
             </div>
 
-            <div className="divide-y divide-white/10 rounded-xl bg-white/3 px-4">
+            <div className="divide-y divide-black/10 rounded-xl bg-black/3 px-4">
               <Switch
                 checked={chatEnabled}
                 onChange={setChatEnabled}

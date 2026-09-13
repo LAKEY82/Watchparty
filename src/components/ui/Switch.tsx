@@ -26,7 +26,7 @@ export function Switch({
         onClick={() => onChange(!checked)}
         className={cn(
           "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
-          checked ? "bg-gradient-to-r from-violet-500 to-fuchsia-500" : "bg-white/15"
+          checked ? "bg-accent" : "bg-black/15"
         )}
       >
         <span
